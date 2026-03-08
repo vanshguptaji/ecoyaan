@@ -18,7 +18,8 @@ import {
 
 const DEFAULT_SHIPPING_FEE = 50;
 const CART_STORAGE_KEY = "ecoyaan_cart";
-const ADDRESS_STORAGE_KEY = "ecoyaan_address";
+const ADDRESSES_STORAGE_KEY = "ecoyaan_addresses";
+const SELECTED_ADDRESS_KEY = "ecoyaan_selected_address";
 
 // ─── localStorage helpers (safe for SSR) ───
 
@@ -52,7 +53,8 @@ const CheckoutContext = createContext<CheckoutContextType | undefined>(
 export function CheckoutProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<CheckoutState>({
     cart: null,
-    shippingAddress: null,
+    savedAddresses: [],
+    selectedAddressId: null,
     orderPlaced: false,
   });
 
@@ -61,12 +63,15 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
   // ─── Hydrate from localStorage on first client render ───
   useEffect(() => {
     const savedCart = loadFromStorage<CartData>(CART_STORAGE_KEY);
-    const savedAddress = loadFromStorage<ShippingAddress>(ADDRESS_STORAGE_KEY);
+    const savedAddresses =
+      loadFromStorage<ShippingAddress[]>(ADDRESSES_STORAGE_KEY) ?? [];
+    const selectedId = loadFromStorage<string>(SELECTED_ADDRESS_KEY);
 
     setState((prev) => ({
       ...prev,
       cart: savedCart,
-      shippingAddress: savedAddress,
+      savedAddresses: savedAddresses,
+      selectedAddressId: selectedId,
     }));
     setHydrated(true);
   }, []);
@@ -77,11 +82,17 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
     saveToStorage(CART_STORAGE_KEY, state.cart);
   }, [state.cart, hydrated]);
 
-  // ─── Persist shipping address to localStorage ───
+  // ─── Persist addresses to localStorage ───
   useEffect(() => {
     if (!hydrated) return;
-    saveToStorage(ADDRESS_STORAGE_KEY, state.shippingAddress);
-  }, [state.shippingAddress, hydrated]);
+    saveToStorage(ADDRESSES_STORAGE_KEY, state.savedAddresses);
+  }, [state.savedAddresses, hydrated]);
+
+  // ─── Persist selected address id ───
+  useEffect(() => {
+    if (!hydrated) return;
+    saveToStorage(SELECTED_ADDRESS_KEY, state.selectedAddressId);
+  }, [state.selectedAddressId, hydrated]);
 
   const setCart = useCallback((cart: CartData) => {
     setState((prev) => ({ ...prev, cart }));
@@ -131,7 +142,6 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
       const updatedItems = prev.cart.cartItems.filter(
         (item) => item.product_id !== productId
       );
-      // If cart becomes empty, keep the shell so shipping_fee etc. persist
       return {
         ...prev,
         cart: { ...prev.cart, cartItems: updatedItems },
@@ -169,9 +179,54 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const setShippingAddress = useCallback((address: ShippingAddress) => {
-    setState((prev) => ({ ...prev, shippingAddress: address }));
+  /** Add a new address to saved addresses */
+  const addAddress = useCallback((address: ShippingAddress) => {
+    setState((prev) => ({
+      ...prev,
+      savedAddresses: [...prev.savedAddresses, address],
+      selectedAddressId: address.id,
+    }));
   }, []);
+
+  /** Update an existing address */
+  const updateAddress = useCallback((address: ShippingAddress) => {
+    setState((prev) => ({
+      ...prev,
+      savedAddresses: prev.savedAddresses.map((a) =>
+        a.id === address.id ? address : a
+      ),
+    }));
+  }, []);
+
+  /** Delete an address */
+  const deleteAddress = useCallback((addressId: string) => {
+    setState((prev) => {
+      const remaining = prev.savedAddresses.filter((a) => a.id !== addressId);
+      return {
+        ...prev,
+        savedAddresses: remaining,
+        selectedAddressId:
+          prev.selectedAddressId === addressId
+            ? remaining.length > 0
+              ? remaining[0].id
+              : null
+            : prev.selectedAddressId,
+      };
+    });
+  }, []);
+
+  /** Select an address for the current order */
+  const selectAddress = useCallback((addressId: string) => {
+    setState((prev) => ({ ...prev, selectedAddressId: addressId }));
+  }, []);
+
+  /** Get the currently selected address */
+  const getSelectedAddress = useCallback((): ShippingAddress | null => {
+    return (
+      state.savedAddresses.find((a) => a.id === state.selectedAddressId) ??
+      null
+    );
+  }, [state.savedAddresses, state.selectedAddressId]);
 
   const placeOrder = useCallback(() => {
     setState((prev) => ({ ...prev, orderPlaced: true }));
@@ -179,9 +234,15 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
 
   /** Reset everything and clear localStorage. */
   const resetCheckout = useCallback(() => {
-    setState({ cart: null, shippingAddress: null, orderPlaced: false });
+    setState({
+      cart: null,
+      savedAddresses: [],
+      selectedAddressId: null,
+      orderPlaced: false,
+    });
     saveToStorage(CART_STORAGE_KEY, null);
-    saveToStorage(ADDRESS_STORAGE_KEY, null);
+    saveToStorage(ADDRESSES_STORAGE_KEY, null);
+    saveToStorage(SELECTED_ADDRESS_KEY, null);
   }, []);
 
   const getSubtotal = useCallback(() => {
@@ -217,7 +278,11 @@ export function CheckoutProvider({ children }: { children: ReactNode }) {
         addToCart,
         removeFromCart,
         updateQuantity,
-        setShippingAddress,
+        addAddress,
+        updateAddress,
+        deleteAddress,
+        selectAddress,
+        getSelectedAddress,
         placeOrder,
         resetCheckout,
         getSubtotal,

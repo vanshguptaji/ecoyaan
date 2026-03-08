@@ -28,9 +28,12 @@ export interface CartData {
 // ─── Shipping Address Types ───
 
 export interface ShippingAddress {
+  id: string;
+  label: string;
   fullName: string;
   email: string;
   phone: string;
+  addressLine: string;
   pinCode: string;
   city: string;
   state: string;
@@ -40,7 +43,8 @@ export interface ShippingAddress {
 
 export interface CheckoutState {
   cart: CartData | null;
-  shippingAddress: ShippingAddress | null;
+  savedAddresses: ShippingAddress[];
+  selectedAddressId: string | null;
   orderPlaced: boolean;
 }
 
@@ -49,7 +53,11 @@ export interface CheckoutContextType extends CheckoutState {
   addToCart: (product: Product) => void;
   removeFromCart: (productId: number) => void;
   updateQuantity: (productId: number, quantity: number) => void;
-  setShippingAddress: (address: ShippingAddress) => void;
+  addAddress: (address: ShippingAddress) => void;
+  updateAddress: (address: ShippingAddress) => void;
+  deleteAddress: (addressId: string) => void;
+  selectAddress: (addressId: string) => void;
+  getSelectedAddress: () => ShippingAddress | null;
   placeOrder: () => void;
   resetCheckout: () => void;
   getSubtotal: () => number;

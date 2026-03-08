@@ -12,7 +12,7 @@ export default function CheckoutLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-gray-50">
+    <div className="flex min-h-screen flex-col bg-[#f8faf9]">
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />

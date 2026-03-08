@@ -1,17 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { Product } from "@/types";
 import { useCheckout } from "@/context/CheckoutContext";
+import { mockProducts } from "@/lib/mock-data";
 import ProductCard from "@/components/shop/ProductCard";
 
-interface ShopPageClientProps {
-  products: Product[];
-}
-
-export default function ShopPageClient({ products }: ShopPageClientProps) {
+/**
+ * Client component for the shop page.
+ * Products are imported directly from mock data — no API calls.
+ */
+export default function ShopPageClient() {
   const { getCartCount } = useCheckout();
   const cartCount = getCartCount();
+  const products = mockProducts;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -28,7 +29,7 @@ export default function ShopPageClient({ products }: ShopPageClientProps) {
       </div>
 
       {/* Product Grid */}
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="stagger-children grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {products.map((product) => (
           <ProductCard key={product.product_id} product={product} />
         ))}
@@ -36,7 +37,7 @@ export default function ShopPageClient({ products }: ShopPageClientProps) {
 
       {/* Floating cart bar */}
       {cartCount > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-gray-200 bg-white/90 px-4 py-3 shadow-lg backdrop-blur-md sm:px-6">
+        <div className="sticky-action-bar fixed inset-x-0 bottom-0 z-40 border-t border-gray-100 bg-white/95 px-4 py-3.5 backdrop-blur-lg sm:px-6">
           <div className="mx-auto flex max-w-5xl items-center justify-between">
             <p className="text-sm font-medium text-gray-700">
               🛒{" "}
@@ -45,7 +46,7 @@ export default function ShopPageClient({ products }: ShopPageClientProps) {
             </p>
             <Link
               href="/checkout/cart"
-              className="rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+              className="rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-700 hover:shadow-xl hover:shadow-emerald-200"
             >
               View Cart →
             </Link>

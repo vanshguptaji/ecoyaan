@@ -8,15 +8,18 @@ export default function Header() {
   const cartCount = getCartCount();
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
-        <Link href="/shop" className="flex items-center gap-2">
-          <span className="text-xl font-bold tracking-tight text-emerald-700">
-            🌿 Ecoyaan
+    <header className="sticky top-0 z-50 border-b border-gray-100 bg-white/90 backdrop-blur-lg">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3.5 sm:px-6">
+        <Link href="/shop" className="flex items-center gap-2.5 group">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 text-lg text-white shadow-md shadow-emerald-200 transition group-hover:shadow-lg group-hover:shadow-emerald-200">
+            🌿
+          </span>
+          <span className="text-lg font-bold tracking-tight text-gray-900">
+            Ecoyaan
           </span>
         </Link>
 
-        <nav className="flex items-center gap-5 text-sm font-medium text-gray-600">
+        <nav className="flex items-center gap-6 text-sm font-medium text-gray-600">
           <Link
             href="/shop"
             className="hidden transition hover:text-emerald-600 sm:inline"
@@ -25,7 +28,7 @@ export default function Header() {
           </Link>
           <Link
             href="/checkout/cart"
-            className="relative flex items-center gap-1.5 transition hover:text-emerald-600"
+            className="relative flex items-center gap-1.5 rounded-xl bg-gray-50 px-3.5 py-2 transition hover:bg-emerald-50 hover:text-emerald-700"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -43,7 +46,7 @@ export default function Header() {
             </svg>
             <span className="hidden sm:inline">Cart</span>
             {cartCount > 0 && (
-              <span className="absolute -right-2.5 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white ring-2 ring-white">
                 {cartCount > 99 ? "99+" : cartCount}
               </span>
             )}
